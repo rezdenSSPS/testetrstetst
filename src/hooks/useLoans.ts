@@ -94,25 +94,58 @@ export function useLoans() {
 
   const updateLoanCondition = async (loanId: string, conditionNotes: string, conditionPhoto?: string) => {
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('loans')
         .update({ 
           condition_notes: conditionNotes,
-          condition_photo: conditionPhoto || '',
+          ...(conditionPhoto && { condition_photo: conditionPhoto })
         })
-        .eq('id', loanId);
+        .eq('id', loanId)
+        .select()
+        .single();
 
       if (error) throw error;
       
       setLoans(prev => 
         prev.map(loan => 
           loan.id === loanId 
-            ? { ...loan, condition_notes: conditionNotes, condition_photo: conditionPhoto || '' }
+            ? { ...loan, ...data }
             : loan
         )
       );
     } catch (error) {
       console.error('Error updating loan condition:', error);
+      throw error;
+    }
+  };
+
+  const uploadLoanPhoto = async (loanId: string, file: File) => {
+    try {
+        if (!supabase) throw new Error("Supabase client is not initialized.");
+
+      const filePath = `public/${loanId}-${Date.now()}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('loan_photos')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('loan_photos')
+        .getPublicUrl(filePath);
+
+      const publicUrl = urlData.publicUrl;
+
+      const loan = loans.find(l => l.id === loanId);
+      if (loan) {
+        await updateLoanCondition(loanId, loan.condition_notes, publicUrl);
+      }
+      
+      return publicUrl;
+
+    } catch (error) {
+      console.error('Error uploading photo:', error);
       throw error;
     }
   };
@@ -127,6 +160,7 @@ export function useLoans() {
     createLoan,
     returnLoan,
     updateLoanCondition,
+    uploadLoanPhoto,
     refetch: fetchLoans,
   };
 }
