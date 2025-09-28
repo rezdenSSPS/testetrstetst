@@ -10,29 +10,26 @@ interface LoanFormProps {
 
 export function LoanForm({ items, people, onSubmit }: LoanFormProps) {
   const [selectedItem, setSelectedItem] = useState('');
-  const [selectedVariant, setSelectedVariant] = useState(''); // Nový stav pro variantu
+  const [selectedVariant, setSelectedVariant] = useState('');
   const [selectedPerson, setSelectedPerson] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selectedItemData = items.find(item => item.id === selectedItem);
-  const hasVariants = selectedItemData && selectedItemData.item_variants.length > 0;
+  const hasVariants = !!(selectedItemData && selectedItemData.item_variants.length > 0);
   
-  const selectedVariantData = hasVariants ? selectedItemData.item_variants.find(v => v.id === selectedVariant) : null;
+  const selectedVariantData = hasVariants ? selectedItemData?.item_variants.find(v => v.id === selectedVariant) : null;
   const maxQuantity = selectedVariantData?.available_quantity || selectedItemData?.available_quantity || 0;
 
-  // Reset varianty při změně hlavní věci
   useEffect(() => {
     setSelectedVariant('');
     setQuantity(1);
   }, [selectedItem]);
   
-  // Reset množství při změně varianty
   useEffect(() => {
     setQuantity(1);
   }, [selectedVariant]);
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,14 +87,13 @@ export function LoanForm({ items, people, onSubmit }: LoanFormProps) {
                   value={item.id}
                   disabled={!isAvailable}
                 >
-                  {item.name} {!isAvailable && '(Všechny varianty vypůjčeny)'}
+                  {item.name} {isAvailable ? '' : '(Vypůjčeno)'}
                 </option>
               )
             })}
           </select>
         </div>
 
-        {/* NOVÝ DROPDOWN PRO VARIANTY - ZOBRAZÍ SE PODLE PODMÍNKY */}
         {hasVariants && (
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-3">
@@ -110,7 +106,7 @@ export function LoanForm({ items, people, onSubmit }: LoanFormProps) {
               required
             >
               <option value="">Vyberte variantu...</option>
-              {selectedItemData.item_variants.map(variant => (
+              {selectedItemData?.item_variants.map(variant => (
                 <option 
                   key={variant.id} 
                   value={variant.id}
@@ -127,18 +123,77 @@ export function LoanForm({ items, people, onSubmit }: LoanFormProps) {
           <label className="block text-sm font-semibold text-gray-700 mb-3">
             Kdo si půjčuje
           </label>
-          {/* ... zbytek formuláře (výběr osoby) zůstává stejný */}
+          <select
+            value={selectedPerson}
+            onChange={(e) => setSelectedPerson(e.target.value)}
+            className="w-full p-4 border border-gray-300 rounded-lg bg-white text-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+            required
+          >
+            <option value="">Vyberte osobu...</option>
+            {people.map(person => (
+              <option key={person.id} value={person.id}>
+                {person.name}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {(selectedItem && !hasVariants || selectedVariant) && (
+        {(selectedItem && !hasVariants) || (hasVariants && selectedVariant) ? (
           <div>
-            {/* ... zbytek formuláře (množství) zůstává stejný */}
+            <label className="block text-sm font-semibold text-gray-700 mb-3">
+              Množství
+            </label>
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => adjustQuantity(-1)}
+                disabled={quantity <= 1}
+                className="p-3 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 rounded-lg transition-colors"
+              >
+                <Minus className="w-5 h-5" />
+              </button>
+              
+              <span className="text-2xl font-bold text-gray-800 min-w-[60px] text-center">
+                {quantity}
+              </span>
+              
+              <button
+                type="button"
+                onClick={() => adjustQuantity(1)}
+                disabled={quantity >= maxQuantity}
+                className="p-3 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 rounded-lg transition-colors"
+              >
+                <Plus className="w-5 h-5" />
+              </button>
+              
+              <span className="text-sm text-gray-600">
+                (max: {maxQuantity})
+              </span>
+            </div>
           </div>
-        )}
+        ) : null}
 
         <div>
-           {/* ... zbytek formuláře (poznámka a tlačítko) zůstává stejný */}
+          <label className="block text-sm font-semibold text-gray-700 mb-3">
+            Poznámka
+          </label>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Volitelná poznámka..."
+            className="w-full p-4 border border-gray-300 rounded-lg resize-none text-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+            rows={3}
+          />
         </div>
+
+        <button
+          type="submit"
+          disabled={!selectedItem || !selectedPerson || quantity <= 0 || (hasVariants && !selectedVariant) || isSubmitting}
+          className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-semibold py-4 px-6 rounded-lg text-lg transition-colors flex items-center justify-center gap-3"
+        >
+          <User className="w-6 h-6" />
+          {isSubmitting ? 'Půjčuji...' : 'Půjčit'}
+        </button>
       </form>
     </div>
   );
