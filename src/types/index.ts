@@ -1,5 +1,22 @@
 export interface ItemVariant {
-   Person {
+  id: string;
+  item_id: string;
+  name: string;
+  total_quantity: number;
+  available_quantity: number;
+  created_at: string;
+}
+
+export interface Item {
+  id: string;
+  name: string;
+  total_quantity: number;
+  available_quantity: number;
+  created_at: string;
+  item_variants: ItemVariant[];
+}
+
+export interface Person {
   id: string;
   name: string;
   created_at: string;
@@ -9,26 +26,14 @@ export interface Loan {
   id: string;
   item_id: string;
   person_id: string;
-  variant_id: string | null; // Odkaz na půjčenou variantu
+  variant_id: string | null;
   quantity: number;
   notes: string;
   condition_photo: string;
   condition_notes: string;
-  loaned_id: string;
-  item_id: string;
-  name: string;
-  total_quantity: numberat: string;
+  loaned_at: string;
   returned_at: string | null;
   items?: Item;
   people?: Person;
-;
-  available_quantity: number;
-  created_at: string;
-}
-
-export interface Item {
-  id: string;
-  name: string;
-  total_quantity: number;
-  available_quantity: number  item_variants?: ItemVariant; // Detail půjčené varianty
+  item_variants?: ItemVariant;
 }
