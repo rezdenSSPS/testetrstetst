@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { ChevronDown, ChevronUp, RotateCcw, Camera, FileText, Clock } from 'lucide-react';
 import type { Loan } from '../types';
 
@@ -6,13 +6,17 @@ interface LoanCardProps {
   loan: Loan;
   onReturn: (loanId: string) => Promise<void>;
   onUpdateCondition: (loanId: string, notes: string, photo?: string) => Promise<void>;
+  onUploadPhoto: (loanId: string, file: File) => Promise<string | undefined>;
 }
 
-export function LoanCard({ loan, onReturn, onUpdateCondition }: LoanCardProps) {
+export function LoanCard({ loan, onReturn, onUpdateCondition, onUploadPhoto }: LoanCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [conditionNotes, setConditionNotes] = useState(loan.condition_notes || '');
   const [isUpdating, setIsUpdating] = useState(false);
   const [isReturning, setIsReturning] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleReturn = async () => {
     setIsReturning(true);
@@ -44,6 +48,24 @@ export function LoanCard({ loan, onReturn, onUpdateCondition }: LoanCardProps) {
       hour: '2-digit',
       minute: '2-digit',
     });
+  };
+
+  const handlePhotoSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingPhoto(true);
+    try {
+      await onUploadPhoto(loan.id, file);
+    } catch (error) {
+      alert('Chyba při nahrávání fotografie.');
+    } finally {
+      setIsUploadingPhoto(false);
+    }
+  };
+
+  const handlePhotoButtonClick = () => {
+    fileInputRef.current?.click();
   };
 
   return (
@@ -104,6 +126,19 @@ export function LoanCard({ loan, onReturn, onUpdateCondition }: LoanCardProps) {
 
       {isExpanded && (
         <div className="mt-6 pt-6 border-t border-gray-200 space-y-4">
+          {loan.condition_photo && (
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Nahraná fotografie
+              </label>
+              <img 
+                src={loan.condition_photo} 
+                alt="Stav věci" 
+                className="rounded-lg max-w-xs max-h-48 object-cover border"
+              />
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Stav a poznámky
@@ -126,13 +161,22 @@ export function LoanCard({ loan, onReturn, onUpdateCondition }: LoanCardProps) {
               <FileText className="w-4 h-4" />
               {isUpdating ? 'Ukládám...' : 'Uložit'}
             </button>
+            
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              onChange={handlePhotoSelect}
+              accept="image/*"
+              className="hidden"
+            />
 
             <button
-              onClick={() => alert('Funkce fotografie bude brzy dostupná')}
-              className="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+              onClick={handlePhotoButtonClick}
+              disabled={isUploadingPhoto}
+              className="bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
             >
               <Camera className="w-4 h-4" />
-              Foto
+              {isUploadingPhoto ? 'Nahrávám...' : 'Nová fotka'}
             </button>
           </div>
 
