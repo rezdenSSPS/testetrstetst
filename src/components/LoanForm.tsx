@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, User, Plus, Minus } from 'lucide-react';
+import { Package, User, Plus, Minus, ChevronsRight } from 'lucide-react';
 import type { Item, Person } from '../types';
 
 interface LoanFormProps {
@@ -15,6 +15,7 @@ export function LoanForm({ items, people, onSubmit }: LoanFormProps) {
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isVariantSelection, setIsVariantSelection] = useState(false);
 
   const selectedItemData = items.find(item => item.id === selectedItem);
   const hasVariants = !!(selectedItemData && selectedItemData.item_variants.length > 0);
@@ -23,9 +24,14 @@ export function LoanForm({ items, people, onSubmit }: LoanFormProps) {
   const maxQuantity = selectedVariantData?.available_quantity || selectedItemData?.available_quantity || 0;
 
   useEffect(() => {
+    if (hasVariants) {
+      setIsVariantSelection(true);
+    } else {
+      setIsVariantSelection(false);
+    }
     setSelectedVariant('');
     setQuantity(1);
-  }, [selectedItem]);
+  }, [selectedItem, hasVariants]);
   
   useEffect(() => {
     setQuantity(1);
@@ -70,54 +76,51 @@ export function LoanForm({ items, people, onSubmit }: LoanFormProps) {
           <label className="block text-sm font-semibold text-gray-700 mb-3">
             Výběr věci
           </label>
-          <select
-            value={selectedItem}
-            onChange={(e) => setSelectedItem(e.target.value)}
-            className="w-full p-4 border border-gray-300 rounded-lg bg-white text-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
-            required
-          >
-            <option value="">Vyberte věc...</option>
-            {items.map(item => {
-              const isAvailable = item.item_variants.length > 0
-                ? item.item_variants.some(v => v.available_quantity > 0)
-                : item.available_quantity > 0;
-              return (
-                <option 
-                  key={item.id} 
-                  value={item.id}
-                  disabled={!isAvailable}
-                >
-                  {item.name} {isAvailable ? '' : '(Vypůjčeno)'}
-                </option>
-              )
-            })}
-          </select>
-        </div>
-
-        {hasVariants && (
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3">
-              Specifikace (varianta)
-            </label>
+          {isVariantSelection && selectedItemData ? (
+            <div className="flex items-center gap-2">
+              <div className="p-4 border border-gray-300 rounded-lg bg-gray-50 text-lg text-gray-500">
+                {selectedItemData.name}
+              </div>
+              <ChevronsRight className="text-gray-400" />
+              <select
+                value={selectedVariant}
+                onChange={(e) => setSelectedVariant(e.target.value)}
+                className="w-full p-4 border border-gray-300 rounded-lg bg-white text-lg focus:ring-2 focus:ring-green-500"
+                required
+              >
+                <option value="">Vyberte specifikaci...</option>
+                {selectedItemData.item_variants.map(variant => (
+                  <option key={variant.id} value={variant.id} disabled={variant.available_quantity === 0}>
+                    {variant.name} (k dispozici: {variant.available_quantity})
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
             <select
-              value={selectedVariant}
-              onChange={(e) => setSelectedVariant(e.target.value)}
-              className="w-full p-4 border border-gray-300 rounded-lg bg-white text-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+              value={selectedItem}
+              onChange={(e) => setSelectedItem(e.target.value)}
+              className="w-full p-4 border border-gray-300 rounded-lg bg-white text-lg focus:ring-2 focus:ring-green-500"
               required
             >
-              <option value="">Vyberte variantu...</option>
-              {selectedItemData?.item_variants.map(variant => (
-                <option 
-                  key={variant.id} 
-                  value={variant.id}
-                  disabled={variant.available_quantity === 0}
-                >
-                  {variant.name} (k dispozici: {variant.available_quantity})
-                </option>
-              ))}
+              <option value="">Vyberte věc...</option>
+              {items.map(item => {
+                const isAvailable = item.item_variants.length > 0
+                  ? item.item_variants.some(v => v.available_quantity > 0)
+                  : item.available_quantity > 0;
+                return (
+                  <option 
+                    key={item.id} 
+                    value={item.id}
+                    disabled={!isAvailable}
+                  >
+                    {item.name} {isAvailable ? '' : '(Vypůjčeno)'}
+                  </option>
+                )
+              })}
             </select>
-          </div>
-        )}
+          )}
+        </div>
 
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-3">
