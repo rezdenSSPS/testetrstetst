@@ -12,7 +12,7 @@ function App() {
   const [showAdmin, setShowAdmin] = useState(false);
   const [notification, setNotification] = useState('');
   
-  const { items, loading: itemsLoading, addItem, updateItemQuantity } = useItems();
+  const { items, loading: itemsLoading, addItem, updateItemQuantity, addVariant } = useItems();
   const { people, loading: peopleLoading, addPerson } = usePeople();
   const { 
     loans, 
@@ -60,6 +60,16 @@ function App() {
     } catch (error) {
       console.error('Error adding item:', error);
       showNotification('Chyba při přidávání věci!');
+    }
+  };
+
+  const handleAddVariant = async (itemId: string, name: string, quantity: number) => {
+    try {
+      await addVariant(itemId, name, quantity);
+      showNotification('Varianta byla úspěšně přidána!');
+    } catch (error) {
+      console.error('Error adding variant:', error);
+      showNotification('Chyba při přidávání varianty!');
     }
   };
 
@@ -154,6 +164,7 @@ function App() {
                 people={people}
                 onAddItem={handleAddItem}
                 onAddPerson={handleAddPerson}
+                onAddVariant={handleAddVariant} 
               />
             )}
           </div>
