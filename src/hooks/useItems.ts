@@ -9,62 +9,29 @@ export function useItems() {
   const fetchItems = async () => {
     try {
       if (!supabase) {
-        console.warn('Supabase not configured
-      console.error('Error fetching items:', error);
-    } finally {
-      setLoading(false);
-');
+        console.warn('Supabase not configured');
         setLoading(false);
         return;
       }
       
-      const { data, error } =    }
-  };
-
-  const addItem = async (name: string, totalQuantity: number) => {
-     await supabase
+      const { data, error } = await supabase
         .from('items')
         .select('*, item_variants(*)')
         .order('name');
 
       if (error) throw error;
       setItems(data || []);
-    } catch (errortry {
-      if (!supabase) throw new Error("Supabase not configured");
-      const { data, error) {
+    } catch (error) {
       console.error('Error fetching items:', error);
     } finally {
-      setLoading(false); } = await supabase
-        .from('items')
-        .insert([
-          {
-            name,
-            total_quantity: totalQuantity,
-            available_quantity: totalQuantity,
-          },
-        ])
-        .select('*, item_variants(*)')
-        .single();
-
-      if (error) throw error;
-      setItems(prev
+      setLoading(false);
     }
   };
 
   const addItem = async (name: string, totalQuantity: number) => {
     try {
       if (!supabase) throw new Error("Supabase not configured");
-      const { data, error } = await supabase => [...prev, data]);
-      return data;
-    } catch (error) {
-      console.error('Error adding item:', error);
-      throw error;
-    }
-  };
-
-  const updateItemQuantity = async (itemId: string, quantityChange: number, variantId?: string) => {
-    try {
-
+      const { data, error } = await supabase
         .from('items')
         .insert([
           {
@@ -74,21 +41,10 @@ export function useItems() {
           },
         ])
         .select()
-        .single      if (!supabase) throw new Error("Supabase not configured");
-      
-      if (variantId) {
-        const item = items.find(i => i.id === itemId);
-        const variant = item?.item_variants.();
+        .single();
 
       if (error) throw error;
-      const newItem = { ...data, item_variants: []find(v => v.id === variantId);
-        if (!variant) return;
-
-        const newAvailableQuantity = variant.available_quantity - quantityChange;
-        
-        await supabase
-          .from('item_variants')
- };
+      const newItem = { ...data, item_variants: [] };
       setItems(prev => [...prev, newItem]);
       return newItem;
     } catch (error) {
@@ -97,36 +53,15 @@ export function useItems() {
     }
   };
 
-            .update({ available_quantity: newAvailableQuantity })
-          .eq('id', variantId);
-        const updateItemQuantity = async (itemId: string, quantityChange: number, variantId?: string) => {
+  const updateItemQuantity = async (itemId: string, quantityChange: number, variantId?: string) => {
     try {
-        await fetchItems();
-
-      } else {
-        const item = items.find(i => i.
       if (!supabase) throw new Error("Supabase not configured");
       
-      if (variantId)id === itemId);
-        if (!item) return;
-
-        const newAvailableQuantity = item.available_quantity {
+      if (variantId) {
         const item = items.find(i => i.id === itemId);
-        const variant = item?. - quantityChange;
-        
-        await supabase
-          .from('items')
-          .update({ available_item_variants.find(v => v.id === variantId);
+        const variant = item?.item_variants.find(v => v.id === variantId);
         if (!variant) return;
 
-quantity: newAvailableQuantity })
-          .eq('id', itemId);
-
-        await fetchItems();
-      }
-    } catch (error) {
-      console.error('Error updating item quantity:', error);
-      throw error;
         const newAvailableQuantity = variant.available_quantity - quantityChange;
         
         await supabase
@@ -137,7 +72,22 @@ quantity: newAvailableQuantity })
         await fetchItems();
 
       } else {
-        const item = items.find(i =>    }
+        const item = items.find(i => i.id === itemId);
+        if (!item) return;
+
+        const newAvailableQuantity = item.available_quantity - quantityChange;
+        
+        await supabase
+          .from('items')
+          .update({ available_quantity: newAvailableQuantity })
+          .eq('id', itemId);
+
+        await fetchItems();
+      }
+    } catch (error) {
+      console.error('Error updating item quantity:', error);
+      throw error;
+    }
   };
 
   useEffect(() => {
@@ -150,8 +100,5 @@ quantity: newAvailableQuantity })
     addItem,
     updateItemQuantity,
     refetch: fetchItems,
- i.id === itemId);
-        if (!item) return;
-
-        const newAvailableQuantity = item.available_quantity  };
+  };
 }
