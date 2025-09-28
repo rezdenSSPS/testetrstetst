@@ -19,7 +19,8 @@ function App() {
     loading: loansLoading, 
     createLoan, 
     returnLoan, 
-    updateLoanCondition 
+    updateLoanCondition,
+    uploadLoanPhoto
   } = useLoans();
 
   const showNotification = (message: string) => {
@@ -74,7 +75,6 @@ function App() {
 
   const loading = itemsLoading || peopleLoading || loansLoading;
 
-  // Check if Supabase is configured
   if (!supabase) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
@@ -112,7 +112,6 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-      {/* Header */}
       <header className="bg-white shadow-lg">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
@@ -133,7 +132,6 @@ function App() {
         </div>
       </header>
 
-      {/* Notification */}
       {notification && (
         <div className="fixed top-4 right-4 z-50 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in">
           <AlertCircle className="w-5 h-5" />
@@ -143,7 +141,6 @@ function App() {
 
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Left Column */}
           <div>
             <LoanForm
               items={items}
@@ -161,7 +158,6 @@ function App() {
             )}
           </div>
 
-          {/* Right Column */}
           <div>
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
@@ -185,6 +181,7 @@ function App() {
                       loan={loan}
                       onReturn={handleLoanReturn}
                       onUpdateCondition={updateLoanCondition}
+                      onUploadPhoto={uploadLoanPhoto}
                     />
                   ))}
                 </div>
