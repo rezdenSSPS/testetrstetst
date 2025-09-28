@@ -14,9 +14,10 @@ export function useItems() {
         return;
       }
       
+      // Upravený dotaz, který načte věci VČETNĚ jejich variant
       const { data, error } = await supabase
         .from('items')
-        .select('*')
+        .select('*, item_variants(*)')
         .order('name');
 
       if (error) throw error;
@@ -30,6 +31,7 @@ export function useItems() {
 
   const addItem = async (name: string, totalQuantity: number) => {
     try {
+      if (!supabase) throw new Error("Supabase not configured");
       const { data, error } = await supabase
         .from('items')
         .insert([
@@ -43,35 +45,50 @@ export function useItems() {
         .single();
 
       if (error) throw error;
-      setItems(prev => [...prev, data]);
-      return data;
+      // Přidáme prázdné pole variant, aby typ seděl
+      const newItem = { ...data, item_variants: [] };
+      setItems(prev => [...prev, newItem]);
+      return newItem;
     } catch (error) {
       console.error('Error adding item:', error);
       throw error;
     }
   };
 
-  const updateItemQuantity = async (itemId: string, quantityChange: number) => {
+  // Tato funkce teď bude upravovat buď hlavní věc, nebo její variantu
+  const updateItemQuantity = async (itemId: string, quantityChange: number, variantId?: string) => {
     try {
-      const item = items.find(i => i.id === itemId);
-      if (!item) return;
-
-      const newAvailableQuantity = item.available_quantity - quantityChange;
+      if (!supabase) throw new Error("Supabase not configured");
       
-      const { error } = await supabase
-        .from('items')
-        .update({ available_quantity: newAvailableQuantity })
-        .eq('id', itemId);
+      if (variantId) {
+        // Aktualizujeme kvantitu varianty
+        const item = items.find(i => i.id === itemId);
+        const variant = item?.item_variants.find(v => v.id === variantId);
+        if (!variant) return;
 
-      if (error) throw error;
-      
-      setItems(prev => 
-        prev.map(i => 
-          i.id === itemId 
-            ? { ...i, available_quantity: newAvailableQuantity }
-            : i
-        )
-      );
+        const newAvailableQuantity = variant.available_quantity - quantityChange;
+        
+        await supabase
+          .from('item_variants')
+          .update({ available_quantity: newAvailableQuantity })
+          .eq('id', variantId);
+        
+        fetchItems(); // Znovu načteme vše pro jednoduchost
+
+      } else {
+        // Aktualizujeme kvantitu hlavní věci (bez variant)
+        const item = items.find(i => i.id === itemId);
+        if (!item) return;
+
+        const newAvailableQuantity = item.available_quantity - quantityChange;
+        
+        await supabase
+          .from('items')
+          .update({ available_quantity: newAvailableQuantity })
+          .eq('id', itemId);
+
+        fetchItems(); // Znovu načteme vše pro jednoduchost
+      }
     } catch (error) {
       console.error('Error updating item quantity:', error);
       throw error;
