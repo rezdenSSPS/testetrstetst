@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Package, Users, Settings, GitCommitVertical } from 'lucide-react';
+import { Plus, Package, Users, Settings, GitCommitVertical, Trash2 } from 'lucide-react';
 import type { Item, Person } from '../types';
 
 interface AdminPanelProps {
@@ -8,9 +8,11 @@ interface AdminPanelProps {
   onAddItem: (name: string, quantity: number) => Promise<void>;
   onAddPerson: (name: string) => Promise<void>;
   onAddVariant: (itemId: string, name: string, quantity: number) => Promise<void>;
+  onDeleteItem: (itemId: string) => Promise<void>;
+  onDeleteVariant: (variantId: string) => Promise<void>;
 }
 
-export function AdminPanel({ items, people, onAddItem, onAddPerson, onAddVariant }: AdminPanelProps) {
+export function AdminPanel({ items, people, onAddItem, onAddPerson, onAddVariant, onDeleteItem, onDeleteVariant }: AdminPanelProps) {
   const [showItemForm, setShowItemForm] = useState(false);
   const [showPersonForm, setShowPersonForm] = useState(false);
   const [newItemName, setNewItemName] = useState('');
@@ -102,7 +104,10 @@ export function AdminPanel({ items, people, onAddItem, onAddPerson, onAddVariant
               <div key={item.id} className="p-3 bg-gray-50 rounded-lg">
                 <div className="flex justify-between items-center">
                   <span className="font-medium text-gray-800">{item.name}</span>
-                  <button onClick={() => setAddingVariantTo(item.id)} className="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-1 px-2 rounded-md transition-colors">Přidat variantu</button>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => setAddingVariantTo(item.id)} className="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-1 px-2 rounded-md">Přidat variantu</button>
+                    <button onClick={() => onDeleteItem(item.id)} className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100"><Trash2 className="w-4 h-4" /></button>
+                  </div>
                 </div>
                 {item.item_variants.length === 0 && (
                   <div className="text-sm text-gray-600">Dostupné: {item.available_quantity}/{item.total_quantity}</div>
@@ -111,9 +116,12 @@ export function AdminPanel({ items, people, onAddItem, onAddPerson, onAddVariant
                 {item.item_variants.length > 0 && (
                   <div className="mt-2 pl-4 border-l-2 border-gray-200 space-y-1">
                     {item.item_variants.map(variant => (
-                      <div key={variant.id} className="text-sm text-gray-700 flex items-center gap-2">
-                        <GitCommitVertical className="w-4 h-4 text-gray-400" />
-                        {variant.name} <span className="text-gray-500">({variant.available_quantity}/{variant.total_quantity})</span>
+                      <div key={variant.id} className="text-sm text-gray-700 flex justify-between items-center group">
+                        <div className="flex items-center gap-2">
+                           <GitCommitVertical className="w-4 h-4 text-gray-400" />
+                           {variant.name} <span className="text-gray-500">({variant.available_quantity}/{variant.total_quantity})</span>
+                        </div>
+                        <button onClick={() => onDeleteVariant(variant.id)} className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-100 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     ))}
                   </div>
