@@ -167,6 +167,7 @@ export function LoanCard({ loan, onReturn, onUpdateCondition, onUploadPhoto }: L
               ref={fileInputRef} 
               onChange={handlePhotoSelect}
               accept="image/*"
+              capture="environment" /* TOTO JE TA ZMĚNA */
               className="hidden"
             />
 
