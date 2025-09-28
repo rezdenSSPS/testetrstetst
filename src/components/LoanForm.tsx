@@ -138,7 +138,7 @@ export function LoanForm({ items, people, onSubmit }: LoanFormProps) {
           </select>
         </div>
 
-        {(selectedItem && !hasVariants) || (hasVariants && selectedVariant) ? (
+        {((selectedItem && !hasVariants) || (hasVariants && selectedVariant)) && (
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-3">
               Množství
@@ -171,7 +171,7 @@ export function LoanForm({ items, people, onSubmit }: LoanFormProps) {
               </span>
             </div>
           </div>
-        ) : null}
+        )}
 
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-3">
