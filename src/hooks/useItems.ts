@@ -83,7 +83,6 @@ export function useItems() {
     }
   };
 
-  // NOVÁ FUNKCE PRO PŘIDÁNÍ VARIANTY
   const addVariant = async (itemId: string, name: string, totalQuantity: number) => {
     try {
       if (!supabase) throw new Error("Supabase not configured");
@@ -99,7 +98,7 @@ export function useItems() {
         .single();
       
       if (error) throw error;
-      await fetchItems(); 
+      await fetchItems(); // SPRÁVNĚ ZNOVU NAČTEME VŠECHNA DATA
       return data;
     } catch (error) {
       console.error('Error adding variant:', error);
@@ -116,7 +115,7 @@ export function useItems() {
     loading,
     addItem,
     updateItemQuantity,
-    addVariant, // <-- Exportujeme novou funkci
+    addVariant,
     refetch: fetchItems,
   };
 }
