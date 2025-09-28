@@ -18,7 +18,6 @@ export function AdminPanel({ items, people, onAddItem, onAddPerson, onAddVariant
   const [newPersonName, setNewPersonName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Stavy pro formulář varianty
   const [addingVariantTo, setAddingVariantTo] = useState<string | null>(null);
   const [newVariantName, setNewVariantName] = useState('');
   const [newVariantQuantity, setNewVariantQuantity] = useState(1);
@@ -27,32 +26,41 @@ export function AdminPanel({ items, people, onAddItem, onAddPerson, onAddVariant
     e.preventDefault();
     if (!newItemName.trim() || newItemQuantity <= 0) return;
     setIsSubmitting(true);
-    await onAddItem(newItemName.trim(), newItemQuantity);
-    setNewItemName('');
-    setNewItemQuantity(1);
-    setShowItemForm(false);
-    setIsSubmitting(false);
+    try {
+        await onAddItem(newItemName.trim(), newItemQuantity);
+        setNewItemName('');
+        setNewItemQuantity(1);
+        setShowItemForm(false);
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
   const handleAddPerson = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPersonName.trim()) return;
     setIsSubmitting(true);
-    await onAddPerson(newPersonName.trim());
-    setNewPersonName('');
-    setShowPersonForm(false);
-    setIsSubmitting(false);
+    try {
+        await onAddPerson(newPersonName.trim());
+        setNewPersonName('');
+        setShowPersonForm(false);
+    } finally {
+        setIsSubmitting(false);
+    }
   };
   
   const handleAddVariant = async (e: React.FormEvent, itemId: string) => {
     e.preventDefault();
     if (!newVariantName.trim() || newVariantQuantity <= 0) return;
     setIsSubmitting(true);
-    await onAddVariant(itemId, newVariantName.trim(), newVariantQuantity);
-    setNewVariantName('');
-    setNewVariantQuantity(1);
-    setAddingVariantTo(null);
-    setIsSubmitting(false);
+    try {
+        await onAddVariant(itemId, newVariantName.trim(), newVariantQuantity);
+        setNewVariantName('');
+        setNewVariantQuantity(1);
+        setAddingVariantTo(null);
+    } finally {
+        setIsSubmitting(false);
+    }
   };
 
   const cancelAddVariant = () => {
@@ -77,8 +85,16 @@ export function AdminPanel({ items, people, onAddItem, onAddPerson, onAddVariant
             </h3>
             <button onClick={() => setShowItemForm(!showItemForm)} className="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full transition-colors"><Plus className="w-4 h-4" /></button>
           </div>
+
           {showItemForm && (
-            <form onSubmit={handleAddItem} className="space-y-3 p-4 bg-blue-50 rounded-lg">{/* ... formulář pro přidání věci ... */}</form>
+            <form onSubmit={handleAddItem} className="space-y-3 p-4 bg-blue-50 rounded-lg">
+                <input type="text" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} placeholder="Název nové věci..." className="w-full p-3 border border-gray-300 rounded-lg" required />
+                <input type="number" value={newItemQuantity} onChange={(e) => setNewItemQuantity(parseInt(e.target.value) || 1)} placeholder="Množství" min="1" className="w-full p-3 border border-gray-300 rounded-lg" required />
+                <div className="flex gap-2">
+                    <button type="submit" disabled={isSubmitting} className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white py-2 px-4 rounded-lg">{isSubmitting ? 'Přidávám...' : 'Přidat věc'}</button>
+                    <button type="button" onClick={() => setShowItemForm(false)} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Zrušit</button>
+                </div>
+            </form>
           )}
 
           <div className="max-h-96 overflow-y-auto space-y-3 pr-2">
@@ -119,7 +135,30 @@ export function AdminPanel({ items, people, onAddItem, onAddPerson, onAddVariant
         </div>
 
         {/* Sekce Lidé */}
-        <div className="space-y-4">{/* ... kód pro sekci Lidé zůstává stejný ... */}</div>
+        <div className="space-y-4">
+            <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                    <Users className="w-5 h-5" /> Lidé
+                </h3>
+                <button onClick={() => setShowPersonForm(!showPersonForm)} className="bg-green-600 hover:bg-green-700 text-white p-2 rounded-full transition-colors"><Plus className="w-4 h-4" /></button>
+            </div>
+            {showPersonForm && (
+                <form onSubmit={handleAddPerson} className="space-y-3 p-4 bg-green-50 rounded-lg">
+                    <input type="text" value={newPersonName} onChange={(e) => setNewPersonName(e.target.value)} placeholder="Jméno nové osoby..." className="w-full p-3 border border-gray-300 rounded-lg" required />
+                    <div className="flex gap-2">
+                        <button type="submit" disabled={isSubmitting} className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white py-2 px-4 rounded-lg">{isSubmitting ? 'Přidávám...' : 'Přidat osobu'}</button>
+                        <button type="button" onClick={() => setShowPersonForm(false)} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Zrušit</button>
+                    </div>
+                </form>
+            )}
+            <div className="max-h-96 overflow-y-auto space-y-2 pr-2">
+                {people.map(person => (
+                <div key={person.id} className="p-3 bg-gray-50 rounded-lg">
+                    <div className="font-medium text-gray-800">{person.name}</div>
+                </div>
+                ))}
+            </div>
+        </div>
       </div>
     </div>
   );
