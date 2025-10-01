@@ -28,6 +28,37 @@ export function useItems() {
     }
   };
 
+  const getItemOrVariantById = async (id: string) => {
+    if (!supabase) throw new Error("Supabase not configured");
+
+    // Search in variants first, as it's more specific
+    const { data: variantData, error: variantError } = await supabase
+      .from('item_variants')
+      .select('*, items(*, item_variants(*))')
+      .eq('id', id)
+      .single();
+
+    if (variantError && variantError.code !== 'PGRST116') throw variantError;
+    if (variantData) {
+      const item = variantData.items;
+      // Make sure the item object is not null
+      if (!item) return null;
+      return { ...item, variant: variantData };
+    }
+
+    // If not in variants, search in items
+    const { data: itemData, error: itemError } = await supabase
+      .from('items')
+      .select('*, item_variants(*)')
+      .eq('id', id)
+      .single();
+
+    if (itemError && itemError.code !== 'PGRST116') throw itemError;
+    if (itemData) return { ...itemData, variant: null };
+
+    return null;
+  };
+
   const addItem = async (name: string, totalQuantity: number) => {
     try {
       if (!supabase) throw new Error("Supabase not configured");
@@ -142,6 +173,7 @@ export function useItems() {
     addVariant,
     deleteItem,
     deleteVariant,
+    getItemOrVariantById,
     refetch: fetchItems,
   };
 }
