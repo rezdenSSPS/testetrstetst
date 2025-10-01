@@ -28,6 +28,22 @@ export function usePeople() {
     }
   };
 
+  const getPersonById = async (id: string) => {
+    if (!supabase) throw new Error("Supabase not configured");
+    const { data, error } = await supabase
+      .from('people')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      // PGRST116 means no rows found, which is not an actual error in this context
+      if (error.code === 'PGRST116') return null;
+      throw error;
+    }
+    return data;
+  };
+
   const addPerson = async (name: string) => {
     try {
       const { data, error } = await supabase
@@ -53,6 +69,7 @@ export function usePeople() {
     people,
     loading,
     addPerson,
+    getPersonById,
     refetch: fetchPeople,
   };
 }
