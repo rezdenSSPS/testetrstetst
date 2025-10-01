@@ -1,30 +1,42 @@
 import { useState } from 'react';
-import { Loader2, Target, AlertCircle, Database } from 'lucide-react';
+import { Loader2, Target, AlertCircle, Database, ScanLine, Edit } from 'lucide-react';
 import { LoanForm } from './components/LoanForm';
 import { LoanCard } from './components/LoanCard';
 import { AdminPanel } from './components/AdminPanel';
+import { CameraScanner } from './components/CameraScanner';
 import { useItems } from './hooks/useItems';
 import { usePeople } from './hooks/usePeople';
 import { useLoans } from './hooks/useLoans';
 import { supabase } from './lib/supabase';
+import type { Item, Person, ItemVariant } from './types';
+
+interface ScannedItem extends Item {
+  variant: ItemVariant | null;
+}
 
 function App() {
   const [showAdmin, setShowAdmin] = useState(false);
   const [notification, setNotification] = useState('');
+  const [isErrorNotification, setIsErrorNotification] = useState(false);
+  const [loanMode, setLoanMode] = useState<'form' | 'scan'>('form');
   
-  const { items, loading: itemsLoading, addItem, updateItemQuantity, addVariant, deleteItem, deleteVariant } = useItems();
-  const { people, loading: peopleLoading, addPerson } = usePeople();
+  const { items, loading: itemsLoading, addItem, updateItemQuantity, addVariant, deleteItem, deleteVariant, getItemOrVariantById, refetch: refetchItems } = useItems();
+  const { people, loading: peopleLoading, addPerson, getPersonById, refetch: refetchPeople } = usePeople();
   const { 
     loans, 
     loading: loansLoading, 
     createLoan, 
     returnLoan, 
     updateLoanCondition,
-    uploadLoanPhoto
+    uploadLoanPhoto,
   } = useLoans();
 
-  const showNotification = (message: string) => {
-    setNotification(message);
+  const [scannedItems, setScannedItems] = useState<Map<string, { item: ScannedItem; quantity: number }>>(new Map());
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const showNotification = (message: string, isError = false) => {
+    setNotification(message); 
+    setIsErrorNotification(isError);
     setTimeout(() => setNotification(''), 3000);
   };
 
@@ -35,9 +47,74 @@ function App() {
       showNotification('Věc byla úspěšně půjčena!');
     } catch (error) {
       console.error('Error creating loan:', error);
-      showNotification('Chyba při půjčování věci!');
+      showNotification('Chyba při půjčování věci!', true);
     }
   };
+  
+  const handleBarcodeScan = async (decodedText: string) => {
+    // 1. Check if it's a person to finalize the loan
+    const person = await getPersonById(decodedText);
+    if (person) {
+        if (scannedItems.size === 0) {
+            showNotification('Nejprve naskenujte nějaké produkty!', true);
+            return;
+        }
+        await handleSubmitScannedItems(person);
+        return;
+    }
+
+    // 2. Check if it's an item or variant
+    const foundItem = await getItemOrVariantById(decodedText);
+    if (foundItem) {
+        const key = foundItem.variant ? foundItem.variant.id : foundItem.id;
+        const existing = scannedItems.get(key);
+
+        const maxQuantity = foundItem.variant 
+          ? foundItem.variant.available_quantity 
+          : foundItem.available_quantity;
+
+        if (existing && existing.quantity >= maxQuantity) {
+            showNotification('Nelze přidat další kusy, není skladem.', true);
+            return;
+        }
+
+        const newScannedItems = new Map(scannedItems);
+        if (existing) {
+          newScannedItems.set(key, { ...existing, quantity: existing.quantity + 1 });
+        } else {
+          if (maxQuantity < 1) {
+              showNotification('Tato položka není skladem.', true);
+              return;
+          }
+          newScannedItems.set(key, { item: foundItem, quantity: 1 });
+        }
+        setScannedItems(newScannedItems);
+        showNotification(`Přidáno: ${foundItem.name} ${foundItem.variant ? `(${foundItem.variant.name})` : ''}`);
+        return;
+    }
+    
+    showNotification('Neznámý kód.', true);
+  };
+
+  const handleSubmitScannedItems = async (person: Person) => {
+    if (!person || scannedItems.size === 0) return;
+    setIsSubmitting(true);
+    try {
+        const notes = ''; // Or add a field for notes
+        for (const [_key, { item, quantity }] of scannedItems) {
+            await createLoan(item.id, person.id, quantity, notes, item.variant?.id || null);
+            await updateItemQuantity(item.id, quantity, item.variant?.id || undefined);
+        }
+        showNotification(`Půjčka pro ${person.name} byla úspěšně vytvořena.`);
+        setScannedItems(new Map());
+    } catch (err) {
+        showNotification('Nepodařilo se vytvořit půjčku.', true);
+        console.error(err);
+    } finally {
+        setIsSubmitting(false);
+    }
+  }
+
 
   const handleLoanReturn = async (loanId: string) => {
     try {
@@ -49,7 +126,7 @@ function App() {
       }
     } catch (error) {
       console.error('Error returning loan:', error);
-      showNotification('Chyba při vracení věci!');
+      showNotification('Chyba při vracení věci!', true);
     }
   };
 
@@ -59,7 +136,7 @@ function App() {
       showNotification('Nová věc byla přidána!');
     } catch (error) {
       console.error('Error adding item:', error);
-      showNotification('Chyba při přidávání věci!');
+      showNotification('Chyba při přidávání věci!', true);
     }
   };
 
@@ -69,7 +146,7 @@ function App() {
       showNotification('Varianta byla úspěšně přidána!');
     } catch (error) {
       console.error('Error adding variant:', error);
-      showNotification('Chyba při přidávání varianty!');
+      showNotification('Chyba při přidávání varianty!', true);
     }
   };
 
@@ -80,7 +157,7 @@ function App() {
         showNotification('Věc byla úspěšně smazána!');
       } catch (error) {
         console.error('Error deleting item:', error);
-        showNotification('Chyba při mazání věci!');
+        showNotification('Chyba při mazání věci!', true);
       }
     }
   };
@@ -92,7 +169,7 @@ function App() {
         showNotification('Varianta byla úspěšně smazána!');
       } catch (error) {
         console.error('Error deleting variant:', error);
-        showNotification('Chyba při mazání varianty!');
+        showNotification('Chyba při mazání varianty!', true);
       }
     }
   };
@@ -103,11 +180,16 @@ function App() {
       showNotification('Nová osoba byla přidána!');
     } catch (error) {
       console.error('Error adding person:', error);
-      showNotification('Chyba při přidávání osoby!');
+      showNotification('Chyba při přidávání osoby!', true);
     }
   };
 
   const loading = itemsLoading || peopleLoading || loansLoading;
+
+  const handleRefreshAdminData = () => {
+    refetchItems();
+    refetchPeople();
+  };
 
   if (!supabase) {
     return (
@@ -167,7 +249,7 @@ function App() {
       </header>
 
       {notification && (
-        <div className="fixed top-4 right-4 z-50 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in">
+        <div className={`fixed top-4 right-4 z-50 ${isErrorNotification ? 'bg-red-600' : 'bg-green-600'} text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in`}>
           <AlertCircle className="w-5 h-5" />
           {notification}
         </div>
@@ -176,11 +258,32 @@ function App() {
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div>
-            <LoanForm
-              items={items}
-              people={people}
-              onSubmit={handleLoanSubmit}
-            />
+            <div className="bg-white rounded-xl shadow-lg p-2 mb-6 flex items-center gap-2">
+              <button 
+                onClick={() => setLoanMode('form')} 
+                className={`flex-1 p-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors ${loanMode === 'form' ? 'bg-green-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>\
+                  <Edit className="w-5 h-5" /> Manuálně
+              </button>
+              <button 
+                onClick={() => setLoanMode('scan')} 
+                className={`flex-1 p-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors ${loanMode === 'scan' ? 'bg-green-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>\
+                  <ScanLine className="w-5 h-5" /> Skenovat
+              </button>
+            </div>
+
+            {loanMode === 'form' ? (
+              <LoanForm
+                items={items}
+                people={people}
+                onSubmit={handleLoanSubmit}
+              />
+            ) : (
+              <CameraScanner 
+                onScan={handleBarcodeScan} 
+                scannedItems={scannedItems}
+                setScannedItems={setScannedItems}
+              />
+            )}
 
             {showAdmin && (
               <AdminPanel
