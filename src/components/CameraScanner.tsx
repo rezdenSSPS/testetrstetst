@@ -95,8 +95,8 @@ export function CameraScanner({ onScan, scannedItems, setScannedItems }: CameraS
       
       <button
         onClick={() => setIsScanning(!isScanning)}
-        className={`w-full p-4 rounded-lg text-lg font-semibold flex items-center justify-center gap-3 transition-colors ${isScanning ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-green-600 hover:bg-green-700 text-white'}`}>\
-        {isScanning ? <><X className="w-6 h-6" /> Ukončit skenování</> : <><Video className="w-6 h-6" /> Spustit skenování</>}\
+        className={`w-full p-4 rounded-lg text-lg font-semibold flex items-center justify-center gap-3 transition-colors ${isScanning ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-green-600 hover:bg-green-700 text-white'}`}>
+        {isScanning ? <><X className="w-6 h-6" /> Ukončit skenování</> : <><Video className="w-6 h-6" /> Spustit skenování</>}
       </button>
       
       {error && <p className="text-red-500 text-sm text-center">{error}</p>}
@@ -109,24 +109,24 @@ export function CameraScanner({ onScan, scannedItems, setScannedItems }: CameraS
                     <div key={key} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div>
                           <p className="font-semibold">{item.name}</p>
-                          {item.variant && <p className="text-sm text-gray-600">{item.variant.name}</p>}\
+                          {item.variant && <p className="text-sm text-gray-600">{item.variant.name}</p>}
                         </div>
-                        <div className="flex items-center gap-4">\
+                        <div className="flex items-center gap-4">
                             <span className="font-bold text-lg">{quantity} ks</span>
-                            <button onClick={() => removeItem(key)} className="p-2 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-full">\
+                            <button onClick={() => removeItem(key)} className="p-2 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-full">
                                 <Trash2 className="w-4 h-4" />
                             </button>
                         </div>
                     </div>
-                ))}\
+                ))}
             </div>
              <button
-                onClick={() => setScannedItems(new Map())}\
-                className="w-full mt-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg text-sm"\
+                onClick={() => setScannedItems(new Map())}
+                className="w-full mt-4 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg text-sm"
                 > Vyčistit seznam
-            </button>\
+            </button>
         </div>
-      )}\
+      )}
     </div>
   );
-}\
+}
