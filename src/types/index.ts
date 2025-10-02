@@ -13,6 +13,7 @@ export interface Item {
   total_quantity: number;
   available_quantity: number;
   created_at: string;
+  consumable: boolean;
   item_variants: ItemVariant[];
 }
 
