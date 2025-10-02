@@ -18,10 +18,11 @@ export function useLoans() {
         .from('loans')
         .select(`
           *,
-          items (*),
+          items!inner(*),
           people (*),
           item_variants (*)
         `)
+        .eq('items.consumable', false)
         .is('returned_at', null)
         .order('loaned_at', { ascending: false });
 
@@ -57,7 +58,9 @@ export function useLoans() {
         .single();
 
       if (error) throw error;
-      setLoans(prev => [data, ...prev]);
+      if (data && data.items && !data.items.consumable) {
+        setLoans(prev => [data, ...prev]);
+      }
       return data;
     } catch (error) {
       console.error('Error creating loan:', error);
