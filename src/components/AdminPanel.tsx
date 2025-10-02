@@ -5,7 +5,7 @@ import type { Item, Person } from '../types';
 interface AdminPanelProps {
   items: Item[];
   people: Person[];
-  onAddItem: (name: string, quantity: number) => Promise<void>;
+  onAddItem: (name: string, quantity: number, consumable: boolean) => Promise<void>;
   onAddPerson: (name: string) => Promise<void>;
   onAddVariant: (itemId: string, name: string, quantity: number) => Promise<void>;
   onDeleteItem: (itemId: string) => Promise<void>;
@@ -18,6 +18,7 @@ export function AdminPanel({ items, people, onAddItem, onAddPerson, onAddVariant
   const [newItemName, setNewItemName] = useState('');
   const [newItemQuantity, setNewItemQuantity] = useState(1);
   const [newPersonName, setNewPersonName] = useState('');
+  const [isConsumable, setIsConsumable] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [addingVariantTo, setAddingVariantTo] = useState<string | null>(null);
@@ -29,7 +30,7 @@ export function AdminPanel({ items, people, onAddItem, onAddPerson, onAddVariant
     if (!newItemName.trim() || newItemQuantity <= 0) return;
     setIsSubmitting(true);
     try {
-        await onAddItem(newItemName.trim(), newItemQuantity);
+        await onAddItem(newItemName.trim(), newItemQuantity, isConsumable);
         setNewItemName('');
         setNewItemQuantity(1);
         setShowItemForm(false);
@@ -92,6 +93,16 @@ export function AdminPanel({ items, people, onAddItem, onAddPerson, onAddVariant
             <form onSubmit={handleAddItem} className="space-y-3 p-4 bg-blue-50 rounded-lg">
                 <input type="text" value={newItemName} onChange={(e) => setNewItemName(e.target.value)} placeholder="Název nové věci..." className="w-full p-3 border border-gray-300 rounded-lg" required />
                 <input type="number" value={newItemQuantity} onChange={(e) => setNewItemQuantity(parseInt(e.target.value) || 1)} placeholder="Množství" min="1" className="w-full p-3 border border-gray-300 rounded-lg" required />
+                <div className="flex items-center gap-2">
+                  <input
+                    id="is-consumable"
+                    type="checkbox"
+                    checked={isConsumable}
+                    onChange={(e) => setIsConsumable(e.target.checked)}
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label htmlFor="is-consumable" className="text-sm text-gray-700 select-none">Spotřební zboží (nezobrazí se v aktivních půjčkách)</label>
+                </div>
                 <div className="flex gap-2">
                     <button type="submit" disabled={isSubmitting} className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white py-2 px-4 rounded-lg">{isSubmitting ? 'Přidávám...' : 'Přidat věc'}</button>
                     <button type="button" onClick={() => setShowItemForm(false)} className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Zrušit</button>
