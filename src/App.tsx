@@ -130,9 +130,9 @@ function App() {
     }
   };
 
-  const handleAddItem = async (name: string, quantity: number) => {
+  const handleAddItem = async (name: string, quantity: number, consumable: boolean) => {
     try {
-      await addItem(name, quantity);
+      await addItem(name, quantity, consumable);
       showNotification('Nová věc byla přidána!');
     } catch (error) {
       console.error('Error adding item:', error);
