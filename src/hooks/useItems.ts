@@ -59,12 +59,12 @@ export function useItems() {
     return null;
   };
 
-  const addItem = async (name: string, totalQuantity: number) => {
+  const addItem = async (name: string, totalQuantity: number, consumable: boolean) => {
     try {
       if (!supabase) throw new Error("Supabase not configured");
       const { data, error } = await supabase
         .from('items')
-        .insert([{ name, total_quantity: totalQuantity, available_quantity: totalQuantity }])
+        .insert([{ name, total_quantity: totalQuantity, available_quantity: totalQuantity, consumable }])
         .select('*, item_variants(*)')
         .single();
 
