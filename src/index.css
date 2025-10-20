@@ -21,11 +21,24 @@
     width: 100% !important;
     background: white !important;
     margin: 0 !important;
-    padding: 0 !important;
+    padding: 0.5rem !important;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0.5rem !important;
   }
   
   /* Make sure all card elements are visible */
   #printable-cards * {
     visibility: visible !important;
+  }
+  
+  /* Card styling for print */
+  .id-card {
+    width: 150px !important;
+    height: 200px !important;
+    font-size: 12px !important;
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+    background: white !important;
   }
 }

@@ -189,7 +189,7 @@ export function IdCardManager({ people, uploadPersonPhoto, batchAddPeople }: IdC
                 /* Card container styling */
                 .id-card-container { 
                     page-break-inside: avoid !important; 
-                    padding: 0.5rem !important;
+                    padding: 0.25rem !important;
                     margin: 0 !important;
                     display: block !important;
                 }
@@ -201,6 +201,17 @@ export function IdCardManager({ people, uploadPersonPhoto, batchAddPeople }: IdC
                     background: white !important;
                     display: block !important;
                     visibility: visible !important;
+                    width: 150px !important;
+                    height: 200px !important;
+                    font-size: 12px !important;
+                }
+                
+                /* Ensure grid layout for print */
+                #printable-cards {
+                    display: grid !important;
+                    grid-template-columns: repeat(3, 1fr) !important;
+                    gap: 0.5rem !important;
+                    padding: 0.5rem !important;
                 }
             }
         `}</style>
@@ -262,7 +273,7 @@ export function IdCardManager({ people, uploadPersonPhoto, batchAddPeople }: IdC
           <div className="mb-4 text-sm text-gray-600">
             Lidé s fotkami: {people.filter(p => p.photo_url).length} | Bez fotek: {people.filter(p => !p.photo_url).length}
           </div>
-          <div id="printable-cards" className="grid grid-cols-2 gap-4">
+          <div id="printable-cards" className="grid grid-cols-3 gap-2">
             {people.map(person => (
               <div key={person.id} className="id-card-container">
                 <IdCard person={person} />
