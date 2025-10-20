@@ -37,7 +37,6 @@ export function usePeople() {
       .single();
 
     if (error) {
-      // PGRST116 means no rows found, which is not an actual error in this context
       if (error.code === 'PGRST116') return null;
       throw error;
     }
@@ -46,6 +45,7 @@ export function usePeople() {
 
   const addPerson = async (name: string) => {
     try {
+      if (!supabase) throw new Error("Supabase not configured");
       const { data, error } = await supabase
         .from('people')
         .insert([{ name }])
@@ -61,6 +61,48 @@ export function usePeople() {
     }
   };
 
+  const batchAddPeople = async (peopleData: Omit<Person, 'id' | 'created_at'>[]) => {
+    if (!supabase) throw new Error("Supabase not configured");
+    try {
+      console.log('Saving people data:', peopleData);
+      const { data, error } = await supabase
+        .from('people')
+        .insert(peopleData)
+        .select();
+
+      if (error) throw error;
+      console.log('Successfully saved people:', data);
+      await fetchPeople();
+      return data;
+    } catch (error) {
+      console.error('Error batch adding people:', error);
+      throw error;
+    }
+  };
+
+  const uploadPersonPhoto = async (file: File) => {
+    if (!supabase) throw new Error("Supabase client is not initialized.");
+    try {
+      const filePath = `public/${Date.now()}-${file.name}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('person_photos')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('person_photos')
+        .getPublicUrl(filePath);
+      
+      return urlData.publicUrl;
+
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
     fetchPeople();
   }, []);
@@ -70,6 +112,8 @@ export function usePeople() {
     loading,
     addPerson,
     getPersonById,
+    batchAddPeople,   // FIXED
+    uploadPersonPhoto, // FIXED
     refetch: fetchPeople,
   };
 }

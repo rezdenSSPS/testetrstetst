@@ -21,6 +21,8 @@ export interface Person {
   id: string;
   name: string;
   created_at: string;
+  date_of_birth?: string | null; // MODIFIED
+  photo_url?: string | null;     // MODIFIED
 }
 
 export interface Loan {

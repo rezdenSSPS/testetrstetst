@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, Target, AlertCircle, Database, ScanLine, Edit } from 'lucide-react';
+import { Loader2, Target, AlertCircle, ScanLine, Edit } from 'lucide-react';
 import { LoanForm } from './components/LoanForm';
 import { LoanCard } from './components/LoanCard';
 import { AdminPanel } from './components/AdminPanel';
@@ -7,7 +7,7 @@ import { CameraScanner } from './components/CameraScanner';
 import { useItems } from './hooks/useItems';
 import { usePeople } from './hooks/usePeople';
 import { useLoans } from './hooks/useLoans';
-import { supabase } from './lib/supabase';
+// supabase client is used inside hooks; no direct import needed here
 import type { Item, Person, ItemVariant } from './types';
 
 interface ScannedItem extends Item {
@@ -20,19 +20,21 @@ function App() {
   const [isErrorNotification, setIsErrorNotification] = useState(false);
   const [loanMode, setLoanMode] = useState<'form' | 'scan'>('form');
   
-  const { items, loading: itemsLoading, addItem, updateItemQuantity, addVariant, deleteItem, deleteVariant, getItemOrVariantById, refetch: refetchItems } = useItems();
-  const { people, loading: peopleLoading, addPerson, getPersonById, refetch: refetchPeople } = usePeople();
+  const { items, loading: itemsLoading, addItem, updateItemQuantity, addVariant, deleteItem, deleteVariant, getItemOrVariantById } = useItems();
+  const { people, loading: peopleLoading, addPerson, getPersonById, batchAddPeople, uploadPersonPhoto } = usePeople();
+  // Debug: verify we actually received the functions from the hook
+  console.log('App.tsx: typeof uploadPersonPhoto from usePeople =', typeof uploadPersonPhoto);
+  console.log('App.tsx: typeof batchAddPeople from usePeople =', typeof batchAddPeople);
   const { 
     loans, 
     loading: loansLoading, 
     createLoan, 
     returnLoan, 
     updateLoanCondition,
-    uploadLoanPhoto,
+    uploadLoanPhoto: uploadLoanPicture,
   } = useLoans();
 
   const [scannedItems, setScannedItems] = useState<Map<string, { item: ScannedItem; quantity: number }>>(new Map());
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const showNotification = (message: string, isError = false) => {
     setNotification(message); 
@@ -44,7 +46,7 @@ function App() {
     try {
       await createLoan(itemId, personId, quantity, notes, variantId);
       await updateItemQuantity(itemId, quantity, variantId || undefined);
-      showNotification('Věc byla úspěšně půjčena!');
+      showNotification('Věc byla úspěčně půjčena!');
     } catch (error) {
       console.error('Error creating loan:', error);
       showNotification('Chyba při půjčování věci!', true);
@@ -52,7 +54,6 @@ function App() {
   };
   
   const handleBarcodeScan = async (decodedText: string) => {
-    // 1. Check if it's a person to finalize the loan
     const person = await getPersonById(decodedText);
     if (person) {
         if (scannedItems.size === 0) {
@@ -63,21 +64,15 @@ function App() {
         return;
     }
 
-    // 2. Check if it's an item or variant
     const foundItem = await getItemOrVariantById(decodedText);
     if (foundItem) {
         const key = foundItem.variant ? foundItem.variant.id : foundItem.id;
         const existing = scannedItems.get(key);
-
-        const maxQuantity = foundItem.variant 
-          ? foundItem.variant.available_quantity 
-          : foundItem.available_quantity;
-
+        const maxQuantity = foundItem.variant ? foundItem.variant.available_quantity : foundItem.available_quantity;
         if (existing && existing.quantity >= maxQuantity) {
             showNotification('Nelze přidat další kusy, není skladem.', true);
             return;
         }
-
         const newScannedItems = new Map(scannedItems);
         if (existing) {
           newScannedItems.set(key, { ...existing, quantity: existing.quantity + 1 });
@@ -98,9 +93,8 @@ function App() {
 
   const handleSubmitScannedItems = async (person: Person) => {
     if (!person || scannedItems.size === 0) return;
-    setIsSubmitting(true);
     try {
-        const notes = ''; // Or add a field for notes
+        const notes = '';
         for (const [_key, { item, quantity }] of scannedItems) {
             await createLoan(item.id, person.id, quantity, notes, item.variant?.id || null);
             await updateItemQuantity(item.id, quantity, item.variant?.id || undefined);
@@ -110,11 +104,8 @@ function App() {
     } catch (err) {
         showNotification('Nepodařilo se vytvořit půjčku.', true);
         console.error(err);
-    } finally {
-        setIsSubmitting(false);
     }
   }
-
 
   const handleLoanReturn = async (loanId: string) => {
     try {
@@ -186,35 +177,6 @@ function App() {
 
   const loading = itemsLoading || peopleLoading || loansLoading;
 
-  const handleRefreshAdminData = () => {
-    refetchItems();
-    refetchPeople();
-  };
-
-  if (!supabase) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
-          <Database className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">
-            Databáze není nakonfigurována
-          </h1>
-          <p className="text-gray-600 mb-6">
-            Pro spuštění systému je potřeba nakonfigurovat Supabase databázi.
-          </p>
-          <div className="bg-blue-50 p-4 rounded-lg text-left">
-            <p className="text-sm text-blue-800 font-semibold mb-2">Kroky k nastavení:</p>
-            <ol className="text-sm text-blue-700 space-y-1">
-              <li>1. Klikněte na ikonu nastavení ⚙️</li>
-              <li>2. Vyberte "Supabase"</li>
-              <li>3. Zadejte URL a API klíč</li>
-            </ol>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
@@ -233,25 +195,19 @@ function App() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Target className="w-8 h-8 text-green-600" />
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-                Airsoft Půjčovna
-              </h1>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Airsoft Půjčovna</h1>
             </div>
-            
             <button
               onClick={() => setShowAdmin(!showAdmin)}
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors"
-            >
-              {showAdmin ? 'Zavřít admin' : 'Administrace'}
-            </button>
+            >{showAdmin ? 'Zavřít admin' : 'Administrace'}</button>
           </div>
         </div>
       </header>
 
       {notification && (
         <div className={`fixed top-4 right-4 z-50 ${isErrorNotification ? 'bg-red-600' : 'bg-green-600'} text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-fade-in`}>
-          <AlertCircle className="w-5 h-5" />
-          {notification}
+          <AlertCircle className="w-5 h-5" />{notification}
         </div>
       )}
 
@@ -259,32 +215,12 @@ function App() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div>
             <div className="bg-white rounded-xl shadow-lg p-2 mb-6 flex items-center gap-2">
-              <button 
-                onClick={() => setLoanMode('form')} 
-                className={`flex-1 p-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors ${loanMode === 'form' ? 'bg-green-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>\
-                  <Edit className="w-5 h-5" /> Manuálně
-              </button>
-              <button 
-                onClick={() => setLoanMode('scan')} 
-                className={`flex-1 p-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors ${loanMode === 'scan' ? 'bg-green-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}>\
-                  <ScanLine className="w-5 h-5" /> Skenovat
-              </button>
+              <button onClick={() => setLoanMode('form')} className={`flex-1 p-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors ${loanMode === 'form' ? 'bg-green-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}><Edit className="w-5 h-5" /> Manuálně</button>
+              <button onClick={() => setLoanMode('scan')} className={`flex-1 p-3 rounded-lg font-semibold flex items-center justify-center gap-2 transition-colors ${loanMode === 'scan' ? 'bg-green-600 text-white' : 'bg-gray-100 hover:bg-gray-200'}`}><ScanLine className="w-5 h-5" /> Skenovat</button>
             </div>
-
-            {loanMode === 'form' ? (
-              <LoanForm
-                items={items}
-                people={people}
-                onSubmit={handleLoanSubmit}
-              />
-            ) : (
-              <CameraScanner 
-                onScan={handleBarcodeScan} 
-                scannedItems={scannedItems}
-                setScannedItems={setScannedItems}
-              />
-            )}
-
+            {loanMode === 'form' ? (<LoanForm items={items} people={people} onSubmit={handleLoanSubmit} />) : (<CameraScanner onScan={handleBarcodeScan} scannedItems={scannedItems} setScannedItems={setScannedItems} />)}
+            
+            {/* THIS BLOCK IS THE FIX */}
             {showAdmin && (
               <AdminPanel
                 items={items}
@@ -294,36 +230,24 @@ function App() {
                 onAddVariant={handleAddVariant}
                 onDeleteItem={handleDeleteItem}
                 onDeleteVariant={handleDeleteVariant}
+                batchAddPeople={batchAddPeople ?? (async () => [])}
+                uploadPersonPhoto={uploadPersonPhoto ?? (async () => undefined)}
               />
             )}
+            
           </div>
-
           <div>
             <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
-                <Target className="w-8 h-8 text-orange-600" />
-                Aktivní půjčky ({loans.length})
-              </h2>
-
+              <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3"><Target className="w-8 h-8 text-orange-600" />Aktivní půjčky ({loans.length})</h2>
               {loans.length === 0 ? (
                 <div className="text-center py-12">
-                  <div className="text-gray-400 mb-4">
-                    <Target className="w-16 h-16 mx-auto" />
-                  </div>
+                  <div className="text-gray-400 mb-4"><Target className="w-16 h-16 mx-auto" /></div>
                   <p className="text-xl text-gray-600">Žádné aktivní půjčky</p>
                   <p className="text-gray-500">Půjčte nějaké vybavení výše</p>
                 </div>
               ) : (
                 <div className="space-y-4 max-h-[calc(100vh-300px)] overflow-y-auto">
-                  {loans.map(loan => (
-                    <LoanCard
-                      key={loan.id}
-                      loan={loan}
-                      onReturn={handleLoanReturn}
-                      onUpdateCondition={updateLoanCondition}
-                      onUploadPhoto={uploadLoanPhoto}
-                    />
-                  ))}
+                  {loans.map(loan => (<LoanCard key={loan.id} loan={loan} onReturn={handleLoanReturn} onUpdateCondition={updateLoanCondition} onUploadPhoto={uploadLoanPicture} />))}
                 </div>
               )}
             </div>
