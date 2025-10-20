@@ -161,12 +161,52 @@ export function IdCardManager({ people, uploadPersonPhoto, batchAddPeople }: IdC
     <div className="bg-white rounded-xl shadow-lg p-6 mt-8">
         <style>{`
             @media print {
-                body, html { background-color: white; }
-                body * { visibility: hidden; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-                #printable-cards, #printable-cards * { visibility: visible; }
-                #printable-cards { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; }
-                .id-card-container { page-break-inside: avoid; padding: 0.5rem; }
-                .id-card { box-shadow: none; border: 1px solid #ccc; }
+                /* Hide everything by default */
+                * { visibility: hidden !important; }
+                
+                /* Only show the printable cards container and its children */
+                #printable-cards, 
+                #printable-cards * { 
+                    visibility: visible !important; 
+                }
+                
+                /* Reset page styling for print */
+                body, html { 
+                    background-color: white !important; 
+                    margin: 0 !important;
+                    padding: 0 !important;
+                }
+                
+                /* Position cards for printing */
+                #printable-cards { 
+                    position: absolute !important; 
+                    left: 0 !important; 
+                    top: 0 !important; 
+                    width: 100% !important; 
+                    margin: 0 !important; 
+                    padding: 0 !important;
+                    background: white !important;
+                }
+                
+                /* Card container styling */
+                .id-card-container { 
+                    page-break-inside: avoid !important; 
+                    padding: 0.5rem !important;
+                    margin: 0 !important;
+                }
+                
+                /* Card styling */
+                .id-card { 
+                    box-shadow: none !important; 
+                    border: 1px solid #ccc !important;
+                    background: white !important;
+                }
+                
+                /* Hide all other elements */
+                header, nav, footer, button, input, .bg-gray-50, .bg-blue-50, .bg-green-50,
+                h1, h2, h3, h4, h5, h6, p, div:not(.id-card):not(.id-card-container):not(#printable-cards) {
+                    display: none !important;
+                }
             }
         `}</style>
 
