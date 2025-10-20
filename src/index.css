@@ -4,15 +4,18 @@
 
 /* Global print styles - hide everything except ID cards */
 @media print {
+  /* Hide everything by default */
+  * {
+    visibility: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
   /* Reset body */
   body, html {
     background: white !important;
     margin: 0 !important;
     padding: 0 !important;
-  }
-  
-  /* Hide everything by default */
-  body * {
     visibility: hidden !important;
   }
   
@@ -33,7 +36,6 @@
   }
   
   /* Make sure all card elements are visible */
-  #printable-cards,
   #printable-cards * {
     visibility: visible !important;
   }
@@ -48,7 +50,10 @@
     background: white !important;
     margin: 0 !important;
     padding: 0.1in !important;
-    visibility: visible !important;
-    display: block !important;
+  }
+  
+  /* Hide any text outside cards */
+  h1, h2, h3, h4, h5, h6, p, span, div:not(.id-card):not(.id-card-container):not(#printable-cards) {
+    display: none !important;
   }
 }

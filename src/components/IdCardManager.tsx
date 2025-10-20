@@ -161,9 +161,12 @@ export function IdCardManager({ people, uploadPersonPhoto, batchAddPeople }: IdC
     <div className="bg-white rounded-xl shadow-lg p-6 mt-8">
         <style>{`
             @media print {
-                /* Hide everything by default */
-                body * {
+                /* Hide the entire page by default */
+                body {
                     visibility: hidden !important;
+                    background: white !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
                 }
                 
                 /* Only show the printable cards container */
@@ -173,19 +176,22 @@ export function IdCardManager({ people, uploadPersonPhoto, batchAddPeople }: IdC
                     top: 0 !important;
                     left: 0 !important;
                     width: 100% !important;
-                    height: 100% !important;
                     background: white !important;
                     margin: 0 !important;
-                    padding: 0.25in !important;
-                    display: grid !important;
-                    grid-template-columns: repeat(3, 1fr) !important;
-                    gap: 0.1in !important;
+                    padding: 0 !important;
                 }
                 
                 /* Make sure all card elements are visible */
-                #printable-cards,
                 #printable-cards * {
                     visibility: visible !important;
+                }
+                
+                /* Card container styling */
+                .id-card-container { 
+                    page-break-inside: avoid !important; 
+                    padding: 0.25rem !important;
+                    margin: 0 !important;
+                    display: block !important;
                 }
                 
                 /* Card styling - larger size */
@@ -202,13 +208,19 @@ export function IdCardManager({ people, uploadPersonPhoto, batchAddPeople }: IdC
                     padding: 0.1in !important;
                 }
                 
-                /* Card container styling */
-                .id-card-container { 
-                    page-break-inside: avoid !important; 
-                    padding: 0 !important;
-                    margin: 0 !important;
-                    display: block !important;
-                    visibility: visible !important;
+                /* Ensure grid layout for print */
+                #printable-cards {
+                    display: grid !important;
+                    grid-template-columns: repeat(3, 1fr) !important;
+                    gap: 0.1in !important;
+                    padding: 0.25in !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                }
+                
+                /* Hide all text elements outside cards */
+                h1, h2, h3, h4, h5, h6, p, span, div:not(.id-card):not(.id-card-container):not(#printable-cards) {
+                    display: none !important;
                 }
             }
         `}</style>
