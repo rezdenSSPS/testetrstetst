@@ -161,29 +161,31 @@ export function IdCardManager({ people, uploadPersonPhoto, batchAddPeople }: IdC
     <div className="bg-white rounded-xl shadow-lg p-6 mt-8">
         <style>{`
             @media print {
-                /* Hide the entire page by default */
-                body {
-                    visibility: hidden !important;
-                    background: white !important;
+                /* Hide everything by default */
+                * { visibility: hidden !important; }
+                
+                /* Only show the printable cards container and its children */
+                #printable-cards, 
+                #printable-cards * { 
+                    visibility: visible !important; 
+                }
+                
+                /* Reset page styling for print */
+                body, html { 
+                    background-color: white !important; 
                     margin: 0 !important;
                     padding: 0 !important;
                 }
                 
-                /* Only show the printable cards container */
-                #printable-cards {
-                    visibility: visible !important;
-                    position: absolute !important;
-                    top: 0 !important;
-                    left: 0 !important;
-                    width: 100% !important;
-                    background: white !important;
-                    margin: 0 !important;
+                /* Position cards for printing */
+                #printable-cards { 
+                    position: absolute !important; 
+                    left: 0 !important; 
+                    top: 0 !important; 
+                    width: 100% !important; 
+                    margin: 0 !important; 
                     padding: 0 !important;
-                }
-                
-                /* Make sure all card elements are visible */
-                #printable-cards * {
-                    visibility: visible !important;
+                    background: white !important;
                 }
                 
                 /* Card container styling */
@@ -191,7 +193,6 @@ export function IdCardManager({ people, uploadPersonPhoto, batchAddPeople }: IdC
                     page-break-inside: avoid !important; 
                     padding: 0.25rem !important;
                     margin: 0 !important;
-                    display: block !important;
                 }
                 
                 /* Card styling - larger size */
@@ -201,26 +202,6 @@ export function IdCardManager({ people, uploadPersonPhoto, batchAddPeople }: IdC
                     background: white !important;
                     display: block !important;
                     visibility: visible !important;
-                    width: 2.5in !important;
-                    height: 3.5in !important;
-                    font-size: 14px !important;
-                    margin: 0 !important;
-                    padding: 0.1in !important;
-                }
-                
-                /* Ensure grid layout for print */
-                #printable-cards {
-                    display: grid !important;
-                    grid-template-columns: repeat(3, 1fr) !important;
-                    gap: 0.1in !important;
-                    padding: 0.25in !important;
-                    width: 100% !important;
-                    height: 100% !important;
-                }
-                
-                /* Hide all text elements outside cards */
-                h1, h2, h3, h4, h5, h6, p, span, div:not(.id-card):not(.id-card-container):not(#printable-cards) {
-                    display: none !important;
                 }
             }
         `}</style>
