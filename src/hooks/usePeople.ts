@@ -69,9 +69,17 @@ export function usePeople() {
       console.log('Environment check - URL exists:', !!import.meta.env.VITE_SUPABASE_URL);
       console.log('Environment check - Key exists:', !!import.meta.env.VITE_SUPABASE_ANON_KEY);
       
+      // Filter out date_of_birth and photo_url if they don't exist in the database
+      const sanitizedData = peopleData.map(person => ({
+        name: person.name,
+        // Only include date_of_birth and photo_url if they're not null/undefined
+        ...(person.date_of_birth && { date_of_birth: person.date_of_birth }),
+        ...(person.photo_url && { photo_url: person.photo_url })
+      }));
+      
       const { data, error } = await supabase
         .from('people')
-        .insert(peopleData)
+        .insert(sanitizedData)
         .select();
 
       if (error) {
