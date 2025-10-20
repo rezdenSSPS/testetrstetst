@@ -40,16 +40,22 @@ export type Database = {
           id: string;
           name: string;
           created_at: string;
+          date_of_birth?: string | null;
+          photo_url?: string | null;
         };
         Insert: {
           id?: string;
           name: string;
           created_at?: string;
+          date_of_birth?: string | null;
+          photo_url?: string | null;
         };
         Update: {
           id?: string;
           name?: string;
           created_at?: string;
+          date_of_birth?: string | null;
+          photo_url?: string | null;
         };
       };
       loans: {

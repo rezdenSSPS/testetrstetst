@@ -65,12 +65,23 @@ export function usePeople() {
     if (!supabase) throw new Error("Supabase not configured");
     try {
       console.log('Saving people data:', peopleData);
+      console.log('Supabase URL:', supabase.supabaseUrl);
+      console.log('Environment check - URL exists:', !!import.meta.env.VITE_SUPABASE_URL);
+      console.log('Environment check - Key exists:', !!import.meta.env.VITE_SUPABASE_ANON_KEY);
+      
       const { data, error } = await supabase
         .from('people')
         .insert(peopleData)
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error details:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        console.error('Error details:', error.details);
+        console.error('Error hint:', error.hint);
+        throw error;
+      }
       console.log('Successfully saved people:', data);
       await fetchPeople();
       return data;
@@ -83,13 +94,22 @@ export function usePeople() {
   const uploadPersonPhoto = async (file: File) => {
     if (!supabase) throw new Error("Supabase client is not initialized.");
     try {
-      const filePath = `public/${Date.now()}-${file.name}`;
+      // Sanitize filename to avoid invalid characters
+      const sanitizedName = file.name
+        .replace(/[^a-zA-Z0-9.-]/g, '_') // Replace special characters with underscores
+        .replace(/_{2,}/g, '_') // Replace multiple underscores with single
+        .toLowerCase();
+      
+      const filePath = `public/${Date.now()}-${sanitizedName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('person_photos')
         .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Upload error details:', uploadError);
+        throw uploadError;
+      }
 
       const { data: urlData } = supabase.storage
         .from('person_photos')
