@@ -195,7 +195,7 @@ function App() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Target className="w-8 h-8 text-green-600" />
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Airsoft Půjčovna</h1>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">ARMYCRAFT</h1>
             </div>
             <button
               onClick={() => setShowAdmin(!showAdmin)}
