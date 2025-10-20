@@ -4,30 +4,28 @@
 
 /* Global print styles - hide everything except ID cards */
 @media print {
-  /* Hide all elements by default */
-  * {
-    visibility: hidden !important;
-  }
-  
-  /* Only show ID cards */
-  #printable-cards,
-  #printable-cards * {
-    visibility: visible !important;
-  }
-  
-  /* Reset body styling for print */
+  /* Hide the entire page by default */
   body {
+    visibility: hidden !important;
     background: white !important;
     margin: 0 !important;
     padding: 0 !important;
   }
   
-  /* Ensure cards are positioned correctly */
+  /* Only show the printable cards container */
   #printable-cards {
+    visibility: visible !important;
     position: absolute !important;
     top: 0 !important;
     left: 0 !important;
     width: 100% !important;
     background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* Make sure all card elements are visible */
+  #printable-cards * {
+    visibility: visible !important;
   }
 }
