@@ -194,24 +194,33 @@ export function IdCardManager({ people, uploadPersonPhoto, batchAddPeople }: IdC
                     display: block !important;
                 }
                 
-                /* Card styling */
+                /* Card styling - larger size */
                 .id-card { 
                     box-shadow: none !important; 
-                    border: 1px solid #ccc !important;
+                    border: 1px solid #000 !important;
                     background: white !important;
                     display: block !important;
                     visibility: visible !important;
-                    width: 150px !important;
-                    height: 200px !important;
-                    font-size: 12px !important;
+                    width: 2.5in !important;
+                    height: 3.5in !important;
+                    font-size: 14px !important;
+                    margin: 0 !important;
+                    padding: 0.1in !important;
                 }
                 
                 /* Ensure grid layout for print */
                 #printable-cards {
                     display: grid !important;
                     grid-template-columns: repeat(3, 1fr) !important;
-                    gap: 0.5rem !important;
-                    padding: 0.5rem !important;
+                    gap: 0.1in !important;
+                    padding: 0.25in !important;
+                    width: 100% !important;
+                    height: 100% !important;
+                }
+                
+                /* Hide all text elements outside cards */
+                h1, h2, h3, h4, h5, h6, p, span, div:not(.id-card):not(.id-card-container):not(#printable-cards) {
+                    display: none !important;
                 }
             }
         `}</style>
