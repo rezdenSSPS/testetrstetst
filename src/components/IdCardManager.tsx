@@ -189,17 +189,17 @@ export function IdCardManager({ people, uploadPersonPhoto, batchAddPeople }: IdC
                 }
                 
                 /* Card styling - larger size */
-                .id-card { 
-                    box-shadow: none !important; 
+                .id-card {
+                    box-shadow: none !important;
                     border: 1px solid #000 !important;
                     background: white !important;
                     display: block !important;
                     visibility: visible !important;
-                    width: 2.5in !important;
-                    height: 3.5in !important;
-                    font-size: 14px !important;
+                    width: 2in !important;
+                    height: 2.8in !important;
+                    font-size: 12px !important;
                     margin: 0 !important;
-                    padding: 0.1in !important;
+                    padding: 0.05in !important;
                 }
                 
                 /* Card container styling */
@@ -270,7 +270,7 @@ export function IdCardManager({ people, uploadPersonPhoto, batchAddPeople }: IdC
           <div className="mb-4 text-sm text-gray-600">
             Lidé s fotkami: {people.filter(p => p.photo_url).length} | Bez fotek: {people.filter(p => !p.photo_url).length}
           </div>
-          <div id="printable-cards" className="grid grid-cols-3 gap-2">
+          <div id="printable-cards" className="grid grid-cols-3 gap-3">
             {people.map(person => (
               <div key={person.id} className="id-card-container">
                 <IdCard person={person} />
